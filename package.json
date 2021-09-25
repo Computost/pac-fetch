@@ -1,0 +1,24 @@
+{
+  "name": "power-platform-cli-wrapper",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "download": "node --loader ts-node/esm --experimental-json-modules --experimental-specifier-resolution=node ./src/download"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.9.6",
+    "@types/yauzl": "^2.9.2",
+    "commander": "^8.2.0",
+    "execa": "^5.1.1",
+    "node-fetch": "^3.0.0",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3",
+    "webpack": "^5.54.0",
+    "yauzl": "^2.10.0"
+  }
+}
