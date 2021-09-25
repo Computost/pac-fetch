@@ -7,5 +7,6 @@
     "moduleResolution": "node",
     "target": "es2015",
     "resolveJsonModule": true
-  }
+  },
+  "exclude": ["bin"]
 }

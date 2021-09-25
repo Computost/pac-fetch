@@ -1,97 +1,87 @@
 import { createWriteStream } from "fs";
-import { mkdir, stat } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { dirname, join } from "path";
-import { Entry, fromBuffer, Options, ZipFile } from "yauzl";
+import { Entry, fromBuffer, ZipFile } from "yauzl";
 
 export default async function unzip(
   buffer: Buffer,
   destination: string,
   { include, pathTransformer }: UnzipOptions
 ): Promise<void> {
+  await createDirectory(destination);
+  const zipFile = await openZipFile(buffer);
+  await forEachEntryIn(zipFile, async (entry) => {
+    if (include?.test(entry.fileName)) {
+      const outputPath = pathTransformer?.(entry.fileName) ?? entry.fileName;
+      const directory = dirname(outputPath);
+      if (directory !== ".") {
+        try {
+          await mkdir(join(destination, directory), { recursive: true });
+        } catch (_) {}
+      }
+      await saveEntry(join(destination, outputPath), entry, zipFile);
+    }
+  });
+}
+
+interface UnzipOptions {
+  include?: RegExp;
+  pathTransformer?: (path: string) => string;
+}
+
+async function createDirectory(path: string) {
   try {
-    await mkdir(destination);
+    await mkdir(path);
   } catch (error: any) {
     if (error?.code === "ENOENT") {
-      await mkdir(destination, { recursive: true });
+      await mkdir(path, { recursive: true });
     } else {
       throw error;
     }
   }
-  const zipFile = await getZipFile(buffer, { lazyEntries: true });
-  const entries = getEntries(zipFile);
-  const emissions: Promise<void>[] = [];
-  for await (const entry of entries) {
-    if (!include || include.test(entry.fileName)) {
-      emissions.push(
-        (async () => {
-          const outputPath =
-            pathTransformer?.(entry.fileName) ?? entry.fileName;
-          const directory = dirname(outputPath);
-          if (directory !== ".") {
-            try {
-              await mkdir(join(destination, directory), { recursive: true });
-            } catch (_) {}
-          }
-          await saveEntry(join(destination, outputPath), entry, zipFile);
-        })()
-      );
-    }
-  }
-  await Promise.all(emissions);
+}
+
+function openZipFile(buffer: Buffer): Promise<ZipFile> {
+  return new Promise<ZipFile>((resolve, reject) =>
+    fromBuffer(
+      buffer,
+      { lazyEntries: true },
+      (error?: Error, zipFile?: ZipFile) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(zipFile!);
+        }
+      }
+    )
+  );
+}
+
+async function forEachEntryIn(
+  zipFile: ZipFile,
+  callback: (entry: Entry) => Promise<void>
+) {
+  const completionPromise = createCompletionPromise(zipFile);
+  const callbackPromises: Promise<void>[] = [];
+
+  zipFile.on("entry", (entry: Entry) => {
+    callbackPromises.push(callback(entry));
+    zipFile.readEntry();
+  });
+
+  zipFile.readEntry();
+
+  await completionPromise;
+  await Promise.all(callbackPromises);
+
   zipFile.close();
 }
 
-function getZipFile(buffer: Buffer, options?: Options): Promise<ZipFile> {
-  return new Promise<ZipFile>((resolve, reject) => {
-    if (options) {
-      fromBuffer(buffer, options, callback);
-    } else {
-      fromBuffer(buffer, callback);
-    }
-
-    function callback(error?: Error, zipFile?: ZipFile) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(zipFile as ZipFile);
-      }
-    }
-  });
-}
-
-async function* getEntries(zipFile: ZipFile): AsyncIterable<Entry> {
-  zipFile.readEntry();
-  const completionPromise = new Promise((resolve, reject) => {
+function createCompletionPromise(zipFile: ZipFile) {
+  return new Promise((resolve, reject) => {
     zipFile.once("end", resolve);
     zipFile.once("error", reject);
   });
-  const data: Entry[] = [];
-  let endData: () => void;
-  let dataPromise = createDataPromise();
-
-  do {
-    while (data.length > 0) {
-      yield data.shift()!;
-    }
-    await Promise.race([completionPromise, dataPromise]);
-  } while (data.length > 0);
-  endData!();
-
-  function createDataPromise() {
-    return new Promise<void>((resolve, reject) => {
-      const callback = (entry: Entry) => {
-        data.push(entry);
-        dataPromise = createDataPromise();
-        zipFile.readEntry();
-        resolve();
-      };
-      zipFile.once("entry", callback);
-      endData = () => {
-        zipFile.off("entry", callback);
-        reject();
-      };
-    });
-  }
 }
 
 function saveEntry(destination: string, entry: Entry, zipFile: ZipFile) {
@@ -106,9 +96,4 @@ function saveEntry(destination: string, entry: Entry, zipFile: ZipFile) {
       }
     });
   });
-}
-
-interface UnzipOptions {
-  include?: RegExp;
-  pathTransformer?: (path: string) => string;
 }
