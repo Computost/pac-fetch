@@ -1,17 +1,19 @@
-export default [
+import NugetPackageSpecification from "./NugetPackageSpecification";
+
+const specs: NugetPackageSpecification[] = [
   {
     id: "Microsoft.PowerApps.CLI",
-    version: "1.9.4",
     platform: "win32",
+    os: "windows",
   },
   {
     id: "Microsoft.PowerApps.CLI.Core.osx-x64",
-    version: "1.9.4",
     platform: "darwin",
+    os: "osx",
   },
   {
     id: "Microsoft.PowerApps.CLI.Core.linux-x64",
-    version: "1.9.4",
     platform: "linux",
   },
 ];
+export default specs;

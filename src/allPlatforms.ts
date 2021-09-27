@@ -5,7 +5,7 @@ import packageSpecs from "./nugetPackages.js";
 export default async function downloadAllPlatforms(path: string) {
   await Promise.all(
     packageSpecs.map((spec) =>
-      downloadPlatform(join(path, spec.platform), spec)
+      downloadPlatform(join(path, spec.os ?? spec.platform), spec)
     )
   );
 }
