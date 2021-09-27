@@ -1,6 +1,6 @@
 {
   "name": "save-power-platform-cli",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Simple console application to download the Power Platform CLI (pac)",
   "type": "module",
   "scripts": {
@@ -13,7 +13,11 @@
   "files": [
     "dist/"
   ],
-  "keywords": ["pac", "Power Platform", "Microsoft"],
+  "keywords": [
+    "pac",
+    "Power Platform",
+    "Microsoft"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
