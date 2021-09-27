@@ -1,5 +1,5 @@
 {
-  "name": "download-power-platform-cli",
+  "name": "save-power-platform-cli",
   "version": "0.0.3",
   "description": "Simple console application to download the Power Platform CLI",
   "type": "module",
@@ -8,7 +8,7 @@
     "build": "tsc"
   },
   "bin": {
-    "download-power-platform-cli": "dist/index.js"
+    "save-power-platform-cli": "dist/index.js"
   },
   "files": [
     "dist/"
