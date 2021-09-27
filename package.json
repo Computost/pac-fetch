@@ -5,8 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "set-version": "node ./setVersion.js"
+    "build": "tsc"
   },
   "bin": {
     "download-power-platform-cli": "dist/index.js"
