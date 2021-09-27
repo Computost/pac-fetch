@@ -1,12 +1,13 @@
+#!/usr/bin/env node
 import { Command } from "commander";
 import { join } from "path";
 import { cwd } from "process";
-import npmPackage from "../../package.json";
-import downloadAllPlatforms from "./allPlatforms";
-import downloadCurrentPlatform from "./currentPlatform";
+import downloadAllPlatforms from "./allPlatforms.js";
+import downloadCurrentPlatform from "./currentPlatform.js";
+import version from "./version.js";
 
 const options: Options = new Command()
-  .version(npmPackage.version)
+  .version(version)
   .option(
     "-a, --all",
     "download Power Platform CLI for all supported platforms " +

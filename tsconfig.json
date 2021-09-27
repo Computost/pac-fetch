@@ -6,7 +6,9 @@
     "strict": true,
     "moduleResolution": "node",
     "target": "es2015",
-    "resolveJsonModule": true
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "outDir": "dist"
   },
-  "exclude": ["bin"]
+  "include": ["./src"]
 }

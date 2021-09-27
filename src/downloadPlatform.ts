@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
-import NugetPackageSpecification from "./NugetPackageSpecification";
-import unzip from "./unzip";
+import NugetPackageSpecification from "./NugetPackageSpecification.js";
+import unzip from "./unzip.js";
 
 export default async function downloadPlatform(
   path: string,
