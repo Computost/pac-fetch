@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "prebuild": "node setVersion.js",
     "build": "tsc"
   },
   "bin": {
