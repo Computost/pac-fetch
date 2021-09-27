@@ -1,9 +1,7 @@
 {
   "name": "download-power-platform-cli",
   "version": "0.0.2",
-  "description": "",
-  "main": "index.js",
-  "type": "module",
+  "description": "Simple console application to download the Power Platform CLI",
   "scripts": {
     "prebuild": "node setVersion.js",
     "build": "tsc"

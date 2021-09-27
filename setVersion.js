@@ -1,5 +1,5 @@
-import { readFile, writeFile } from "fs/promises";
-import { EOL } from "os";
+const { readFile, writeFile } = require("fs/promises");
+const { EOL } = require("os");
 
 (async () => {
   const contents = (await readFile("./package.json")).toString();
