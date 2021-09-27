@@ -2,6 +2,7 @@
   "name": "download-power-platform-cli",
   "version": "0.0.2",
   "description": "Simple console application to download the Power Platform CLI",
+  "type": "module",
   "scripts": {
     "prebuild": "node setVersion.js",
     "build": "tsc"
@@ -23,6 +24,7 @@
   "dependencies": {
     "commander": "^8.2.0",
     "node-fetch": "^3.0.0",
+    "validate-npm-package-name": "^3.0.0",
     "yauzl": "^2.10.0"
   }
 }
