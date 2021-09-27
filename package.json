@@ -1,6 +1,6 @@
 {
   "name": "save-power-platform-cli",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Simple console application to download the Power Platform CLI",
   "type": "module",
   "scripts": {
