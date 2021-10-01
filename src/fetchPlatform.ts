@@ -16,7 +16,7 @@ export default async function fetchPlatform(
     pathTransformer: (path) => path.replace(/^tools\//, ""),
   });
   if (spec.os === "linux") {
-    await chmod(join(path, "pac"), 0x007);
+    await chmod(join(path, "pac"), 0x711);
   }
 }
 
