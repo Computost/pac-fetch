@@ -1,5 +1,5 @@
 import { platform } from "os";
-import fetchPlatform from "./downloadPlatform.js";
+import fetchPlatform from "./fetchPlatform.js";
 import packageSpecs from "./specifications.js";
 
 export default async function fetchCurrentPlatform(path: string) {

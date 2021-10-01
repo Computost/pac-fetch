@@ -1,5 +1,5 @@
 import { join } from "path";
-import fetchPlatform from "./downloadPlatform.js";
+import fetchPlatform from "./fetchPlatform.js";
 import packageSpecs from "./specifications.js";
 
 export default async function fetchAllPlatforms(path: string) {
