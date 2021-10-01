@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 import NugetPackageSpecification from "./NugetPackageSpecification.js";
 import unzip from "./unzip.js";
 
-export default async function downloadPlatform(
+export default async function fetchPlatform(
   path: string,
   spec: NugetPackageSpecification
 ) {
