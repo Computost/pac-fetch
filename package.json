@@ -4,9 +4,9 @@
   "description": "Simple console application to download the Power Platform CLI (pac)",
   "type": "module",
   "scripts": {
-    "prebuild": "node setVersion.js",
+    "prebuild": "node --loader ts-node/esm setVersion.ts",
     "build": "tsc",
-    "prestart": "node setVersion.js",
+    "prestart": "node --loader ts-node/esm setVersion.ts",
     "start": "node --loader ts-node/esm src/cli.ts"
   },
   "bin": {
