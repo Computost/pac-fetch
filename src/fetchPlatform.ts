@@ -15,7 +15,8 @@ export default async function fetchPlatform(
     include: /^tools\//,
     pathTransformer: (path) => path.replace(/^tools\//, ""),
   });
-  await chmod(join(path, "pac"), 0x777);
+  const executableName = spec.os === "windows" ? "pac.exe" : "pac";
+  await chmod(join(path, executableName), 0x777);
 }
 
 async function getLatestVersion(id: string) {
