@@ -16,7 +16,8 @@ export default async function fetchPlatform(
     pathTransformer: (path) => path.replace(/^tools\//, ""),
   });
   if ((spec.os ?? spec.platform) === "linux") {
-    await chmod(join(path, "pac"), 0x711);
+    console.log("making pac executable (0x777)");
+    await chmod(join(path, "pac"), 0x777);
   }
 }
 
