@@ -1,4 +1,4 @@
-import { chmod } from "fs/promises";
+import { chmod, stat } from "fs/promises";
 import fetch from "node-fetch";
 import { join } from "path";
 import NugetPackageSpecification from "./NugetPackageSpecification.js";
@@ -8,6 +8,10 @@ export default async function fetchPlatform(
   path: string,
   spec: NugetPackageSpecification
 ) {
+  const executableName = spec.os === "windows" ? "pac.exe" : "pac";
+  if (await pathExists(join(path, executableName))) {
+    return;
+  }
   const id = spec.id.toLowerCase();
   const version = await getLatestVersion(id);
   const buffer = await getBuffer(id, version);
@@ -15,8 +19,20 @@ export default async function fetchPlatform(
     include: /^tools\//,
     pathTransformer: (path) => path.replace(/^tools\//, ""),
   });
-  const executableName = spec.os === "windows" ? "pac.exe" : "pac";
   await chmod(join(path, executableName), 0x777);
+}
+
+async function pathExists(path: string) {
+  try {
+    await stat(path);
+    return true;
+  } catch (error: any) {
+    if (error.code === "ENOENT") {
+      return false;
+    } else {
+      throw error;
+    }
+  }
 }
 
 async function getLatestVersion(id: string) {
