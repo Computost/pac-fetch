@@ -16,5 +16,7 @@ program
     "destination path to download the Power Platform CLI",
     getDefaultPath()
   )
-  .action(fetchPowerPlatformCli)
+  .action(async (options) => {
+    await fetchPowerPlatformCli(options);
+  })
   .parse();

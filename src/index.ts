@@ -12,6 +12,7 @@ export default async function fetchPowerPlatformCli(options?: Options) {
   } else {
     await fetchCurrentPlatform(path);
   }
+  return path;
 }
 
 interface Options {
