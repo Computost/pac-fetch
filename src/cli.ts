@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { program } from "commander";
-import { join } from "path";
-import { cwd } from "process";
+import getDefaultPath from "./getDefaultPath.js";
 import fetchPowerPlatformCli from "./index.js";
 import version from "./version.js";
 
@@ -15,7 +14,7 @@ program
   .option(
     "-p, --path <path>",
     "destination path to download the Power Platform CLI",
-    join(cwd(), "bin")
+    getDefaultPath()
   )
   .action(fetchPowerPlatformCli)
   .parse();
