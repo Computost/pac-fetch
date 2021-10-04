@@ -1,5 +1,5 @@
 {
-  "name": "fetch-power-platform-cli",
+  "name": "pac-fetch",
   "version": "0.0.24",
   "description": "Simple console application to download the Power Platform CLI (pac)",
   "type": "module",
