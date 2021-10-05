@@ -21,7 +21,6 @@
     "Microsoft"
   ],
   "main": "dist/index.js",
-  "types": "dist/types",
   "author": "",
   "license": "ISC",
   "devDependencies": {
