@@ -7,7 +7,6 @@
     "moduleResolution": "node",
     "target": "es2015",
     "declaration": true,
-    "declarationDir": "dist/types",
     "outDir": "dist"
   },
   "include": ["./src"],
