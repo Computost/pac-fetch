@@ -14,6 +14,7 @@ const specs: NugetPackageSpecification[] = [
   {
     id: "Microsoft.PowerApps.CLI.Core.linux-x64",
     platform: "linux",
+    os: "linux",
   },
 ];
 export default specs;

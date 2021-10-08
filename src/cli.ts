@@ -13,8 +13,7 @@ program
   )
   .option(
     "-p, --path <path>",
-    "destination path to download the Power Platform CLI",
-    getDefaultPath()
+    "destination path to download the Power Platform CLI"
   )
   .action(async (options) => {
     await fetchPowerPlatformCli(options);
