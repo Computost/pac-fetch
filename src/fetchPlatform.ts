@@ -47,6 +47,6 @@ async function getBuffer(id: string, version: string) {
   const response = await fetch(
     `https://api.nuget.org/v3-flatcontainer/${id}/${version}/${id}.${version}.nupkg`
   );
-  const buffer = await response.buffer();
+  const buffer = await response.arrayBuffer();
   return buffer;
 }

@@ -4,7 +4,7 @@ import { dirname, join } from "path";
 import { Entry, fromBuffer, ZipFile } from "yauzl";
 
 export default async function unzip(
-  buffer: Buffer,
+  buffer: ArrayBuffer,
   destination: string,
   { include, pathTransformer }: UnzipOptions
 ): Promise<void> {
@@ -41,10 +41,10 @@ async function createDirectory(path: string) {
   }
 }
 
-function openZipFile(buffer: Buffer): Promise<ZipFile> {
+function openZipFile(buffer: ArrayBuffer): Promise<ZipFile> {
   return new Promise<ZipFile>((resolve, reject) =>
     fromBuffer(
-      buffer,
+      Buffer.from(buffer),
       { lazyEntries: true },
       (error?: Error, zipFile?: ZipFile) => {
         if (error) {
