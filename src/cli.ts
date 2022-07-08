@@ -15,6 +15,10 @@ program
     "-p, --path <path>",
     "destination path to download the Power Platform CLI"
   )
+  .option(
+    "-v, --pac-version <version>",
+    "version of the Power Platform CLI"
+  )
   .action(async (options) => {
     await fetchPowerPlatformCli(options);
   })

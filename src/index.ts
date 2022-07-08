@@ -13,9 +13,9 @@ export default async function fetchPowerPlatformCli(options?: Options) {
   }
 
   if (options?.all) {
-    await fetchAllPlatforms(path);
+    await fetchAllPlatforms(path, options.version);
   } else {
-    await fetchCurrentPlatform(path, appendOs);
+    await fetchCurrentPlatform(path, appendOs, options?.version);
   }
   return path;
 }
@@ -23,4 +23,5 @@ export default async function fetchPowerPlatformCli(options?: Options) {
 interface Options {
   all?: boolean;
   path: string;
+  version?: string;
 }

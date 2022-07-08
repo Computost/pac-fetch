@@ -6,14 +6,18 @@ import unzip from "./unzip.js";
 
 export default async function fetchPlatform(
   path: string,
-  spec: NugetPackageSpecification
+  spec: NugetPackageSpecification,
+  version?: string
 ) {
   const executableName = spec.os === "windows" ? "pac.exe" : "pac";
   if (await pathExists(join(path, executableName))) {
     return;
   }
   const id = spec.id.toLowerCase();
-  const version = await getLatestVersion(id);
+  if (!version) {
+    version = await getLatestVersion(id);
+  }
+
   const buffer = await getBuffer(id, version);
   await unzip(buffer, path, {
     include: /^tools\//,
@@ -35,7 +39,7 @@ async function pathExists(path: string) {
   }
 }
 
-async function getLatestVersion(id: string) {
+async function getLatestVersion(id: string): Promise<string> {
   const response = await fetch(
     `https://api.nuget.org/v3/registration5-semver1/${id}/index.json`
   );
