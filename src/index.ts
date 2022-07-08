@@ -22,6 +22,6 @@ export default async function fetchPowerPlatformCli(options?: Options) {
 
 interface Options {
   all?: boolean;
-  path: string;
+  path?: string;
   version?: string;
 }
