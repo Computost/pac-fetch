@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: "Automated Version Bump"
-        uses: "phips28/gh-action-bump-version@9.1.0"
+        uses: "phips28/gh-action-bump-version@v9.1.0"
         id: version-bump
         with:
           tag-prefix: v
