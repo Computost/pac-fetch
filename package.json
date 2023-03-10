@@ -14,6 +14,7 @@
     "pac-fetch": "dist/cli.js"
   },
   "files": [
+    "README.md",
     "dist/"
   ],
   "keywords": [
