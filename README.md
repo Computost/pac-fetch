@@ -4,7 +4,7 @@ Currently, the Power Platform product group does not provide an automated way to
 
 ## Usage
 
-### Commnad line
+### Command line
 
 ```
 npx pac-fetch --path ./pac
