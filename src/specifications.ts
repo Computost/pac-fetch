@@ -1,5 +1,3 @@
-import NugetPackageSpecification from "./NugetPackageSpecification";
-
 const specs: NugetPackageSpecification[] = [
   {
     id: "Microsoft.PowerApps.CLI",
@@ -18,3 +16,11 @@ const specs: NugetPackageSpecification[] = [
   },
 ];
 export default specs;
+
+export interface NugetPackageSpecification {
+  id: string;
+  platform: string;
+  os: OperatingSystem;
+}
+
+export type OperatingSystem = "windows" | "osx" | "linux";
