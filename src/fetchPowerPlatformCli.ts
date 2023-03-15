@@ -1,18 +1,19 @@
 import { readFile } from "fs/promises";
-import { version } from "os";
+import { platform, version } from "os";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import exists from "./exists.js";
+import areArraysEqual from "./areArraysEqual.js";
 import fetchAllPlatforms from "./fetchAllPlatforms.js";
 import fetchCurrentPlatform from "./fetchCurrentPlatform.js";
+import specs, { OperatingSystem } from "./specifications.js";
 
-export default async function fetchPowerPlatformCli(options?: {
-  all?: boolean;
-  path?: string;
-  version?: string;
-  update?: boolean;
-  log?: (...data: any[]) => void;
-}) {
+export default async function fetchPowerPlatformCli(options?: Options) {
+  if (options?.all && options?.operatingSystem) {
+    throw new Error(
+      'Conflicting options: cannot specify both "operatingSystem" and "all."'
+    );
+  }
+
   const packagePath =
     options?.path ??
     (function getDefaultPath() {
@@ -21,29 +22,24 @@ export default async function fetchPowerPlatformCli(options?: {
       return join(packageDirectory, "bin");
     })();
 
-  const context = await (async function getContext(): Promise<Context> {
-    const path = join(packagePath, "pac-fetch.json");
-    try {
-      return JSON.parse((await readFile(path)).toString());
-    } catch (error: any) {
-      if (error.code === "ENOENT") {
-        return {};
-      }
-      throw error;
-    }
-  })();
-  if (
-    (function skipFetch() {
-      if (options?.update) {
-        return false;
-      }
-    })()
-  ) {
-    return;
-  }
+  const operatingSystems = options?.all
+    ? specs.map((spec) => spec.os)
+    : [
+        options?.operatingSystem ??
+          (() => {
+            const plat = platform();
+            const spec = specs.find((spec) => spec.platform === platform());
+            if (!spec) {
+              throw new Error(`Unrecognized operating system: ${plat}`);
+            }
+            return spec.os;
+          })(),
+      ];
+
+  const version = options?.version ?? "latest";
 
   const configPath = join(packagePath, "pac-fetch.json");
-  const config = await (async function getConfig(): Promise<Partial<Context>> {
+  const config = await (async function getConfig(): Promise<Config> {
     try {
       return JSON.parse((await readFile(configPath)).toString());
     } catch (error: any) {
@@ -55,20 +51,23 @@ export default async function fetchPowerPlatformCli(options?: {
   })();
 
   const now = new Date().getTime();
-  if (
-    (function expired() {
-      return "expiry" in config && config.expiry && config.expiry < now;
-    })() ||
-    (function differentVersion() {
-      return (
-        options?.version &&
-        "version" in config &&
-        config.version &&
-        config.version !== options.version
+  if (options?.force) {
+    options.log?.('"force" detected in options. Fetching pac...');
+  } else {
+    if (
+      areArraysEqual(config.operatingSystems, operatingSystems) &&
+      ((config.version &&
+        config.version !== "latest" &&
+        config.version === options?.version) ||
+        (config.expiry && config.expiry > now))
+    ) {
+      options?.log?.(
+        `pac-fetch.json configuration file matches options and have Skipping pac download`
       );
-    })()
-  ) {
+      return;
+    }
   }
+
   if (options?.all) {
     await fetchAllPlatforms(packagePath, options.version);
   } else {
@@ -77,11 +76,17 @@ export default async function fetchPowerPlatformCli(options?: {
   return packagePath;
 }
 
-type Options = {
+interface Options {
   all?: boolean;
+  operatingSystem?: OperatingSystem;
   path?: string;
   version?: string;
-  update?: boolean;
-};
+  force?: boolean;
+  log?: (...data: any[]) => void;
+}
 
-type Context = { expiry?: number; version?: string };
+type Config = {
+  expiry?: number;
+  operatingSystems?: OperatingSystem[];
+  version?: string;
+};
