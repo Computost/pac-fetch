@@ -1,4 +1,4 @@
-const specs: NugetPackageSpecification[] = [
+const specifications: NugetPackageSpecification[] = [
   {
     id: "Microsoft.PowerApps.CLI",
     platform: "win32",
@@ -15,7 +15,7 @@ const specs: NugetPackageSpecification[] = [
     os: "linux",
   },
 ];
-export default specs;
+export default specifications;
 
 export interface NugetPackageSpecification {
   id: string;
