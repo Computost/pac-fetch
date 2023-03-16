@@ -1,7 +1,7 @@
 import { chmod, stat } from "fs/promises";
 import fetch from "node-fetch";
 import { join } from "path";
-import NugetPackageSpecification from "./NugetPackageSpecification.js";
+import { NugetPackageSpecification } from "./specifications.js";
 import unzip from "./unzip.js";
 
 export default async function fetchPlatform(

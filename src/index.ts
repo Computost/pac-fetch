@@ -1,3 +1,3 @@
-import fetchPowerPlatformCli from "./fetchPowerPlatformCli";
+import fetchPowerPlatformCli from "./fetchPowerPlatformCli.js";
 
 export default fetchPowerPlatformCli;

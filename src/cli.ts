@@ -18,7 +18,11 @@ program
     "-v, --pac-version <version>",
     "version of the Power Platform CLI to download"
   )
-  .action(async (options) => {
-    await fetchPowerPlatformCli(options);
+  .action(async ({ pacVersion: version, ...options }) => {
+    await fetchPowerPlatformCli({
+      log: console.log,
+      ...options,
+      ...(version ? { version } : {}),
+    });
   })
   .parse();

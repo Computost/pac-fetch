@@ -1,12 +1,11 @@
-import { readFile, rm } from "fs/promises";
-import { platform, version } from "os";
+import { chmod, readFile, rm, writeFile } from "fs/promises";
+import { platform } from "os";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import areArraysEqual from "./areArraysEqual.js";
-import fetchAllPlatforms from "./fetchAllPlatforms.js";
-import fetchCurrentPlatform from "./fetchCurrentPlatform.js";
 import inOneLine from "./inOneLine.js";
 import specifications, { OperatingSystem } from "./specifications.js";
+import unzip from "./unzip.js";
 
 export default async function fetchPowerPlatformCli(options?: Options) {
   if (options?.all && options?.operatingSystem) {
@@ -87,12 +86,12 @@ export default async function fetchPowerPlatformCli(options?: Options) {
                   const uniqueVersions = new Set<string>(
                     Object.values(config.operatingSystems)
                   );
-                  uniqueVersions.size === 1
+                  return uniqueVersions.size === 1
                     ? uniqueVersions.values().next().value
                     : Object.keys<OperatingSystem>(config.operatingSystems)
                         .map((os) => `${os}: ${config.operatingSystems![os]}`)
                         .join(", ");
-                })()}`
+                })()})`
               : ""
           }
         `;
@@ -130,18 +129,77 @@ export default async function fetchPowerPlatformCli(options?: Options) {
     }
   }
 
-  const rmDirPromise = rm(packagePath, { recursive: true });
+  /// TODO: Don't do this until we've determined we need to download latest versions
+  const rmDirPromise = rm(packagePath, { recursive: true, force: true });
 
-  const versionToDownload =
-    version === "latest"
-      ? await (async function getLatestVersion() {})()
-      : version;
+  const multiOs = operatingSystems.length > 1;
+  const downloadedVersions = (
+    await Promise.all<{ os: OperatingSystem; version: string }>(
+      operatingSystems.map(async (os) => {
+        const log = (...data: any[]) => {
+          if (!options?.log) {
+            return;
+          }
+          if (multiOs) {
+            options.log(`${os}:`, ...data);
+          } else {
+            options.log(...data);
+          }
+        };
 
-  if (options?.all) {
-    await fetchAllPlatforms(packagePath, options.version);
-  } else {
-    await fetchCurrentPlatform(packagePath, appendOs, options?.version);
-  }
+        const id = specifications.find((spec) => spec.os === os)!.id;
+
+        const osVersion =
+          version === "latest"
+            ? await (async function getOsVersion() {
+                const response = await fetch(
+                  `https://api.nuget.org/v3/registration5-semver1/${id.toLowerCase()}/index.json`
+                );
+                const packageIndex =
+                  (await response.json()) as NugetPackageIndex;
+                return packageIndex.items[0].upper;
+              })()
+            : version;
+
+        if (!options?.force && osVersion === config.operatingSystems?.[os]) {
+          log(`Already have latest version ${osVersion}. Skipping fetch.`);
+          return { os, version: osVersion };
+        }
+
+        log(`Downloading ${id} version ${osVersion}.`);
+        const buffer = await (async function getBuffer() {
+          const response = await fetch(
+            `https://api.nuget.org/v3-flatcontainer/${id.toLowerCase()}/${osVersion}/${id.toLowerCase()}.${osVersion}.nupkg`
+          );
+          const buffer = await response.arrayBuffer();
+          return buffer;
+        })();
+        log("Download complete.");
+        await rmDirPromise;
+        const targetDirectory = multiOs ? join(packagePath, os) : packagePath;
+        log(`Extracting to ${targetDirectory}`);
+        await unzip(buffer, targetDirectory, {
+          include: /^tools\//,
+          pathTransformer: (path) => path.replace(/^tools\//, ""),
+        });
+        log("Extraction complete");
+        const executableName = os === "windows" ? "pac.exe" : "pac";
+        await chmod(join(targetDirectory, executableName), 0x777);
+        log(`Granted execute permissions on ${executableName}.`);
+        return { os, version: osVersion };
+      })
+    )
+  ).reduce((current, { os, version }) => ({ ...current, [os]: version }), {});
+
+  await writeFile(
+    configPath,
+    JSON.stringify({
+      expiry: now + 60 * 60 * 1000,
+      operatingSystems: downloadedVersions,
+      version,
+    } as Config)
+  );
+
   return packagePath;
 }
 
@@ -160,4 +218,8 @@ type Config = {
     [key in OperatingSystem]?: string;
   };
   version?: string;
+};
+
+type NugetPackageIndex = {
+  items: { upper: string }[];
 };
