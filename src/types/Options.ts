@@ -1,4 +1,4 @@
-import { OperatingSystem } from "./specifications.js";
+import { OperatingSystem } from "../specifications.js";
 
 export default interface Options {
   all?: boolean;

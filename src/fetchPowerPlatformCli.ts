@@ -4,11 +4,11 @@ import { platform } from "os";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Entry, fromBuffer, ZipFile } from "yauzl";
-import areArraysEqual from "./areArraysEqual.js";
-import Config from "./Config";
-import inOneLine from "./inOneLine.js";
-import NugetPackageRegistration from "./NugetPackageIndex";
-import Options from "./Options";
+import areArraysEqual from "./util/areArraysEqual.js";
+import Config from "./types/Config";
+import inOneLine from "./util/inOneLine.js";
+import NugetPackageRegistration from "./types/NugetPackageIndex";
+import Options from "./types/Options";
 import specifications, { OperatingSystem } from "./specifications.js";
 
 export default async function fetchPowerPlatformCli(options?: Options) {
