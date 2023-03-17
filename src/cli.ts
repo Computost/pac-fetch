@@ -18,6 +18,10 @@ program
     "-v, --pac-version <version>",
     "version of the Power Platform CLI to download"
   )
+  .option(
+    "-f, --force",
+    "force pac-fetch to download pac regardless of the current path state"
+  )
   .action(async ({ pacVersion: version, ...options }) => {
     await fetchPowerPlatformCli({
       log: console.log,

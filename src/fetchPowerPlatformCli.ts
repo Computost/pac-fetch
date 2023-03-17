@@ -1,11 +1,15 @@
-import { chmod, readFile, rm, writeFile } from "fs/promises";
+import { createWriteStream } from "fs";
+import { chmod, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { platform } from "os";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { Entry, fromBuffer, ZipFile } from "yauzl";
 import areArraysEqual from "./areArraysEqual.js";
+import Config from "./Config";
 import inOneLine from "./inOneLine.js";
+import NugetPackageRegistration from "./NugetPackageIndex";
+import Options from "./Options";
 import specifications, { OperatingSystem } from "./specifications.js";
-import unzip from "./unzip.js";
 
 export default async function fetchPowerPlatformCli(options?: Options) {
   if (options?.all && options?.operatingSystem) {
@@ -64,18 +68,14 @@ export default async function fetchPowerPlatformCli(options?: Options) {
   })();
 
   const now = new Date().getTime();
+  const optionsMatchConfig =
+    areArraysEqual(
+      Object.keys(config.operatingSystems ?? {}),
+      operatingSystems
+    ) && config.version === version;
   if (options?.force) {
     options.log?.('"force" detected in options. Fetching pac.');
-  } else if (
-    (function optionsMatchConfig() {
-      return (
-        areArraysEqual(
-          Object.keys(config.operatingSystems ?? {}),
-          operatingSystems
-        ) && config.version === version
-      );
-    })()
-  ) {
+  } else if (optionsMatchConfig) {
     if (config.version === "latest") {
       if (config.expiry) {
         const currentDownloadedPacVersion = inOneLine`
@@ -129,8 +129,10 @@ export default async function fetchPowerPlatformCli(options?: Options) {
     }
   }
 
-  /// TODO: Don't do this until we've determined we need to download latest versions
-  const rmDirPromise = rm(packagePath, { recursive: true, force: true });
+  const rmPackageDirPromise = optionsMatchConfig
+    ? Promise.resolve()
+    : rm(packagePath, { recursive: true, force: true });
+  const rmConfigPromise = rm(configPath, { force: true });
 
   const multiOs = operatingSystems.length > 1;
   const downloadedVersions = (
@@ -149,22 +151,42 @@ export default async function fetchPowerPlatformCli(options?: Options) {
 
         const id = specifications.find((spec) => spec.os === os)!.id;
 
-        const osVersion =
-          version === "latest"
-            ? await (async function getOsVersion() {
-                const response = await fetch(
-                  `https://api.nuget.org/v3/registration5-semver1/${id.toLowerCase()}/index.json`
-                );
-                const packageIndex =
-                  (await response.json()) as NugetPackageIndex;
-                return packageIndex.items[0].upper;
-              })()
-            : version;
+        const osVersion = await (async function getOsVersion() {
+          const response = await fetch(
+            `https://api.nuget.org/v3/registration5-semver1/${id.toLowerCase()}/index.json`
+          );
+          const packageRegistration =
+            (await response.json()) as NugetPackageRegistration;
+          if (version === "latest") {
+            return packageRegistration.items[0].upper;
+          }
+          if (
+            !packageRegistration.items[0].items.some(
+              (catalogPackage) =>
+                catalogPackage.catalogEntry.version === version
+            )
+          ) {
+            throw new Error(`Could not find version ${version} for ${id}`);
+          }
+          return version;
+        })();
 
-        if (!options?.force && osVersion === config.operatingSystems?.[os]) {
+        if (
+          !options?.force &&
+          optionsMatchConfig &&
+          osVersion === config.operatingSystems?.[os]
+        ) {
           log(`Already have latest version ${osVersion}. Skipping fetch.`);
           return { os, version: osVersion };
         }
+
+        const targetDirectory = multiOs ? join(packagePath, os) : packagePath;
+        const rmDirPromise = optionsMatchConfig
+          ? rm(targetDirectory, {
+              recursive: true,
+              force: true,
+            })
+          : Promise.resolve();
 
         log(`Downloading ${id} version ${osVersion}.`);
         const buffer = await (async function getBuffer() {
@@ -175,14 +197,74 @@ export default async function fetchPowerPlatformCli(options?: Options) {
           return buffer;
         })();
         log("Download complete.");
+
         await rmDirPromise;
-        const targetDirectory = multiOs ? join(packagePath, os) : packagePath;
+        await rmPackageDirPromise;
         log(`Extracting to ${targetDirectory}`);
-        await unzip(buffer, targetDirectory, {
-          include: /^tools\//,
-          pathTransformer: (path) => path.replace(/^tools\//, ""),
-        });
+        await (async function unzip(): Promise<void> {
+          await mkdir(targetDirectory, { recursive: true });
+
+          const zipFile = await (function openZipFile(): Promise<ZipFile> {
+            return new Promise<ZipFile>((resolve, reject) =>
+              fromBuffer(
+                Buffer.from(buffer),
+                { lazyEntries: true },
+                (error?: any, zipFile?: ZipFile) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(zipFile!);
+                  }
+                }
+              )
+            );
+          })();
+
+          const completionPromise = new Promise((resolve, reject) => {
+            zipFile.once("end", resolve);
+            zipFile.once("error", reject);
+          });
+          const callbackPromises: Promise<void>[] = [];
+
+          zipFile.on("entry", (entry: Entry) => {
+            callbackPromises.push(
+              (async function saveEntry() {
+                if (!/^tools\//.test(entry.fileName)) {
+                  return;
+                }
+                const outputPath = entry.fileName.replace(/^tools\//, "");
+                const directory = dirname(outputPath);
+                await mkdir(join(targetDirectory, directory), {
+                  recursive: true,
+                });
+                await (function saveEntry() {
+                  return new Promise((resolve, reject) => {
+                    zipFile.openReadStream(entry, (error, stream) => {
+                      if (error) {
+                        reject(error);
+                      } else {
+                        stream!.pipe(
+                          createWriteStream(join(targetDirectory, outputPath))
+                        );
+                        stream!.once("end", resolve);
+                        stream!.once("error", reject);
+                      }
+                    });
+                  });
+                })();
+              })()
+            );
+            zipFile.readEntry();
+          });
+          zipFile.readEntry();
+
+          await completionPromise;
+          await Promise.all(callbackPromises);
+
+          zipFile.close();
+        })();
         log("Extraction complete");
+
         const executableName = os === "windows" ? "pac.exe" : "pac";
         await chmod(join(targetDirectory, executableName), 0x777);
         log(`Granted execute permissions on ${executableName}.`);
@@ -191,10 +273,15 @@ export default async function fetchPowerPlatformCli(options?: Options) {
     )
   ).reduce((current, { os, version }) => ({ ...current, [os]: version }), {});
 
+  await rmConfigPromise;
   await writeFile(
     configPath,
     JSON.stringify({
-      expiry: now + 60 * 60 * 1000,
+      ...(version === "latest"
+        ? {
+            expiry: now + 60 * 60 * 1000,
+          }
+        : {}),
       operatingSystems: downloadedVersions,
       version,
     } as Config)
@@ -202,24 +289,3 @@ export default async function fetchPowerPlatformCli(options?: Options) {
 
   return packagePath;
 }
-
-interface Options {
-  all?: boolean;
-  operatingSystem?: OperatingSystem;
-  path?: string;
-  version?: string;
-  force?: boolean;
-  log?: (...data: any[]) => void;
-}
-
-type Config = {
-  expiry?: number;
-  operatingSystems?: {
-    [key in OperatingSystem]?: string;
-  };
-  version?: string;
-};
-
-type NugetPackageIndex = {
-  items: { upper: string }[];
-};
