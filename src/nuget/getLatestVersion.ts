@@ -1,5 +1,5 @@
-import getRegistrationPage from "./getRegistrationPage";
+import getRegistrationPage from "./getRegistrationPage.js";
 
 export default async function getLatestVersion(id: string): Promise<string> {
-  return (await getRegistrationPage(id)).upper;
+  return (await getRegistrationPage(id)).items[0].upper;
 }

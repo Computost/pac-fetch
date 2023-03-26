@@ -1,13 +1,13 @@
 import { FetchMockStatic } from "fetch-mock";
-import { RegistrationPage } from "../types";
+import { PackageMetadataResponse } from "../types.js";
 
-export default function mockRegistrationPage(
+export default function mockPackageMetadataResponse(
   fetchMock: FetchMockStatic,
   id: string,
-  registrationPage: RegistrationPage
+  packageMetadataResponse: PackageMetadataResponse
 ) {
   fetchMock.get(
     `https://api.nuget.org/v3/registration5-semver1/${id.toLowerCase()}/index.json`,
-    registrationPage
+    packageMetadataResponse
   );
 }

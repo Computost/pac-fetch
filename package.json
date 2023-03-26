@@ -7,7 +7,7 @@
     "prebuild": "npm run set-version",
     "build": "tsc",
     "prestart": "npm run set-version",
-    "start": "node --loader ts-node/esm src/cli.ts",
+    "start": "ts-node src/cli.ts",
     "set-version": "genversion --es6 --double --semi src/version.ts",
     "test": "jest"
   },

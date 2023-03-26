@@ -7,5 +7,5 @@ export default async function downloadVersion(
   const response = await fetch(
     `https://api.nuget.org/v3-flatcontainer/${id.toLowerCase()}/${version}/${id.toLowerCase()}.${version}.nupkg`
   );
-  return response.arrayBuffer();
+  return await response.arrayBuffer();
 }

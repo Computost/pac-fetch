@@ -1,6 +1,6 @@
 import { join } from "path";
 import { ZipFile } from "yazl";
-import FileSystem from "./FileSystem";
+import type FileSystem from "./FileSystem.js";
 
 export default function createZipFile(contents: FileSystem): Promise<Buffer> {
   return new Promise((resolve, reject) => {

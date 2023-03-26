@@ -1,50 +1,43 @@
-import { createWriteStream } from "fs";
-import { chmod, mkdir, readFile, rm, writeFile } from "fs/promises";
+import { chmod, readFile, rm, writeFile } from "fs/promises";
 import { platform } from "os";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { Entry, fromBuffer, ZipFile } from "yauzl";
-import areArraysEqual from "./util/areArraysEqual.js";
-import Config from "./types/Config";
+import Config from "./types/Config.js";
 import inOneLine from "./util/inOneLine.js";
-import NugetPackageRegistration from "./types/NugetPackageIndex";
-import Options from "./types/Options";
+import Options from "./types/Options.js";
 import specifications, { OperatingSystem } from "./specifications.js";
+import getLatestVersion from "./nuget/getLatestVersion.js";
+import doesVersionExist from "./nuget/doesVersionExist.js";
+import unzip from "./unzip/unzip.js";
+import downloadVersion from "./nuget/downloadVersion.js";
 
 export default async function fetchPowerPlatformCli(options?: Options) {
-  if (options?.all && options?.operatingSystem) {
-    throw new Error(
-      'Conflicting options: cannot specify both "operatingSystem" and "all."'
-    );
-  }
+  const operatingSystems = (function getRequestedOperatingSystems() {
+    if (options?.all && options?.operatingSystem) {
+      throw new Error(
+        'Conflicting options: cannot specify both "operatingSystem" and "all."'
+      );
+    }
 
-  const operatingSystems = options?.all
-    ? specifications.map((spec) => spec.os)
-    : [
-        (() => {
-          if (!options?.operatingSystem) {
-            return;
-          }
-          if (
-            !specifications.some((spec) => spec.os === options.operatingSystem)
-          ) {
-            throw new Error(
-              `Unrecognized operating system: ${options.operatingSystem}`
-            );
-          }
-          return options.operatingSystem;
-        })() ??
-          (() => {
-            const plat = platform();
-            const spec = specifications.find(
-              (spec) => spec.platform === platform()
-            );
-            if (!spec) {
-              throw new Error(`Unrecognized platform: ${plat}`);
-            }
-            return spec.os;
-          })(),
-      ];
+    if (options?.all) {
+      return specifications.map((spec) => spec.os);
+    }
+
+    if (options?.operatingSystem) {
+      if (!specifications.some((spec) => spec.os === options.operatingSystem)) {
+        throw new Error(
+          `Unrecognized operating system: ${options.operatingSystem}`
+        );
+      }
+      return [options.operatingSystem];
+    }
+
+    const spec = specifications.find((spec) => spec.platform === platform());
+    if (!spec) {
+      throw new Error(`Unrecognized platform: ${platform()}`);
+    }
+    return [spec.os];
+  })();
 
   const version = options?.version ?? "latest";
 
@@ -68,11 +61,18 @@ export default async function fetchPowerPlatformCli(options?: Options) {
   })();
 
   const now = new Date().getTime();
-  const optionsMatchConfig =
-    areArraysEqual(
-      Object.keys(config.operatingSystems ?? {}),
-      operatingSystems
-    ) && config.version === version;
+  const optionsMatchConfig = (() => {
+    if (config.version !== version || !config.operatingSystems) {
+      return false;
+    }
+    const configOperatingSystems = Object.keys<OperatingSystem>(
+      config.operatingSystems
+    );
+    if (configOperatingSystems.length !== operatingSystems.length) {
+      return false;
+    }
+    return operatingSystems.every((os) => configOperatingSystems.includes(os));
+  })();
   if (options?.force) {
     options.log?.('"force" detected in options. Fetching pac.');
   } else if (optionsMatchConfig) {
@@ -152,20 +152,10 @@ export default async function fetchPowerPlatformCli(options?: Options) {
         const id = specifications.find((spec) => spec.os === os)!.id;
 
         const osVersion = await (async function getOsVersion() {
-          const response = await fetch(
-            `https://api.nuget.org/v3/registration5-semver1/${id.toLowerCase()}/index.json`
-          );
-          const packageRegistration =
-            (await response.json()) as NugetPackageRegistration;
           if (version === "latest") {
-            return packageRegistration.items[0].upper;
+            return getLatestVersion(id);
           }
-          if (
-            !packageRegistration.items[0].items.some(
-              (catalogPackage) =>
-                catalogPackage.catalogEntry.version === version
-            )
-          ) {
+          if (!(await doesVersionExist(id, version))) {
             throw new Error(`Could not find version ${version} for ${id}`);
           }
           return version;
@@ -189,80 +179,13 @@ export default async function fetchPowerPlatformCli(options?: Options) {
           : Promise.resolve();
 
         log(`Downloading ${id} version ${osVersion}.`);
-        const buffer = await (async function getBuffer() {
-          const response = await fetch(
-            `https://api.nuget.org/v3-flatcontainer/${id.toLowerCase()}/${osVersion}/${id.toLowerCase()}.${osVersion}.nupkg`
-          );
-          const buffer = await response.arrayBuffer();
-          return buffer;
-        })();
+        const buffer = Buffer.from(await downloadVersion(id, osVersion));
         log("Download complete.");
 
         await rmDirPromise;
         await rmPackageDirPromise;
         log(`Extracting to ${targetDirectory}`);
-        await (async function unzip(): Promise<void> {
-          await mkdir(targetDirectory, { recursive: true });
-
-          const zipFile = await (function openZipFile(): Promise<ZipFile> {
-            return new Promise<ZipFile>((resolve, reject) =>
-              fromBuffer(
-                Buffer.from(buffer),
-                { lazyEntries: true },
-                (error?: any, zipFile?: ZipFile) => {
-                  if (error) {
-                    reject(error);
-                  } else {
-                    resolve(zipFile!);
-                  }
-                }
-              )
-            );
-          })();
-
-          const completionPromise = new Promise((resolve, reject) => {
-            zipFile.once("end", resolve);
-            zipFile.once("error", reject);
-          });
-          const callbackPromises: Promise<void>[] = [];
-
-          zipFile.on("entry", (entry: Entry) => {
-            callbackPromises.push(
-              (async function saveEntry() {
-                if (!/^tools\//.test(entry.fileName)) {
-                  return;
-                }
-                const outputPath = entry.fileName.replace(/^tools\//, "");
-                const directory = dirname(outputPath);
-                await mkdir(join(targetDirectory, directory), {
-                  recursive: true,
-                });
-                await (function saveEntry() {
-                  return new Promise((resolve, reject) => {
-                    zipFile.openReadStream(entry, (error, stream) => {
-                      if (error) {
-                        reject(error);
-                      } else {
-                        stream!.pipe(
-                          createWriteStream(join(targetDirectory, outputPath))
-                        );
-                        stream!.once("end", resolve);
-                        stream!.once("error", reject);
-                      }
-                    });
-                  });
-                })();
-              })()
-            );
-            zipFile.readEntry();
-          });
-          zipFile.readEntry();
-
-          await completionPromise;
-          await Promise.all(callbackPromises);
-
-          zipFile.close();
-        })();
+        await unzip(buffer, targetDirectory, "tools/");
         log("Extraction complete");
 
         const executableName = os === "windows" ? "pac.exe" : "pac";

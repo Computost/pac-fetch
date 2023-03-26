@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { FetchMockStatic } from "fetch-mock";
-import mockRegistrationPage from "./mock/mockRegistrationPage";
-import doesVersionExist from "./doesVersionExist";
+import mockPackageMetadataResponse from "./mock/mockPackageMetadataResponse.js";
+import doesVersionExist from "./doesVersionExist.js";
 
 jest.mock("node-fetch", () => require("fetch-mock-jest").sandbox());
 const fetchMock: FetchMockStatic = require("node-fetch");
@@ -12,9 +12,8 @@ beforeEach(() => {
 describe("doesVersionExist", () => {
   test("Returns true if the package contains the requested version", async () => {
     const id = "My.Package";
-    mockRegistrationPage(fetchMock, id, {
-      items: [{ catalogEntry: { version: "1" } }],
-      upper: "1",
+    mockPackageMetadataResponse(fetchMock, id, {
+      items: [{ items: [{ catalogEntry: { version: "1" } }], upper: "1" }],
     });
 
     const exists = await doesVersionExist(id, "1");
@@ -24,7 +23,9 @@ describe("doesVersionExist", () => {
 
   test("Returns false if the package does not contain the requested version", async () => {
     const id = "My.Package";
-    mockRegistrationPage(fetchMock, id, { items: [], upper: "" });
+    mockPackageMetadataResponse(fetchMock, id, {
+      items: [{ items: [], upper: "" }],
+    });
 
     const exists = await doesVersionExist(id, "1");
 
