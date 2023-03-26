@@ -1,7 +1,7 @@
 import { FetchMockStatic } from "fetch-mock";
 import { PackageMetadataResponse } from "../types.js";
 
-export default function mockPackageMetadataResponse(
+export default function mockPackageMetadata(
   fetchMock: FetchMockStatic,
   id: string,
   packageMetadataResponse: PackageMetadataResponse

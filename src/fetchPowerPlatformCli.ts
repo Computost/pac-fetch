@@ -179,7 +179,9 @@ export default async function fetchPowerPlatformCli(options?: Options) {
           : Promise.resolve();
 
         log(`Downloading ${id} version ${osVersion}.`);
-        const buffer = Buffer.from(await downloadVersion(id, osVersion));
+        const buffer = Buffer.from(
+          new Uint8Array(await downloadVersion(id, osVersion))
+        );
         log("Download complete.");
 
         await rmDirPromise;

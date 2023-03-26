@@ -1,8 +1,8 @@
 const specifications: NugetPackageSpecification[] = [
   {
-    id: "Microsoft.PowerApps.CLI",
-    platform: "win32",
-    os: "windows",
+    id: "Microsoft.PowerApps.CLI.Core.linux-x64",
+    platform: "linux",
+    os: "linux",
   },
   {
     id: "Microsoft.PowerApps.CLI.Core.osx-x64",
@@ -10,9 +10,9 @@ const specifications: NugetPackageSpecification[] = [
     os: "osx",
   },
   {
-    id: "Microsoft.PowerApps.CLI.Core.linux-x64",
-    platform: "linux",
-    os: "linux",
+    id: "Microsoft.PowerApps.CLI",
+    platform: "win32",
+    os: "windows",
   },
 ];
 export default specifications;
@@ -23,4 +23,4 @@ export interface NugetPackageSpecification {
   os: OperatingSystem;
 }
 
-export type OperatingSystem = "windows" | "osx" | "linux";
+export type OperatingSystem = "linux" | "osx" | "windows";

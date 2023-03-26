@@ -18,6 +18,8 @@ describe("downloadVersion", () => {
 
     const result = await downloadVersion(id, "1");
 
-    expect(result).toEqual(arrayBuffer);
+    expect(Buffer.from(new Uint8Array(result))).toEqual(
+      Buffer.from(new Uint8Array(arrayBuffer))
+    );
   });
 });

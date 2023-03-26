@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { FetchMockStatic } from "fetch-mock";
 import getLatestVersion from "./getLatestVersion.js";
-import mockPackageMetadataResponse from "./mock/mockPackageMetadataResponse.js";
+import mockPackageMetadata from "./mock/mockPackageMetadataResponse.js";
 
 jest.mock("node-fetch", () => require("fetch-mock-jest").sandbox());
 const fetchMock: FetchMockStatic = require("node-fetch");
@@ -12,7 +12,7 @@ beforeEach(() => {
 describe("getLatest", () =>
   test("Returns the latest version of the package for the ID provide", async () => {
     const id = "My.Package";
-    mockPackageMetadataResponse(fetchMock, id, {
+    mockPackageMetadata(fetchMock, id, {
       items: [{ items: [], upper: "1" }],
     });
 
