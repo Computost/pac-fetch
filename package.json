@@ -9,7 +9,7 @@
     "prestart": "npm run set-version",
     "start": "ts-node src/cli.ts",
     "set-version": "genversion --es6 --double --semi src/version.ts",
-    "test": "jest"
+    "test": "vitest"
   },
   "bin": {
     "pac-fetch": "dist/cli.js"
@@ -43,11 +43,14 @@
     "ts-jest-mock-import-meta": "^1.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5",
+    "vitest": "^0.29.8",
+    "vitest-fetch-mock": "^0.2.2",
     "yazl": "^2.5.1"
   },
   "dependencies": {
     "commander": "^10.0.0",
-    "node-fetch": "^2.6.9",
+    "cross-fetch": "^3.1.5",
+    "node-fetch": "^3.3.1",
     "yauzl": "^2.10.0"
   }
 }

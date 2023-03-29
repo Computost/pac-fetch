@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch from "cross-fetch";
 import withoutWhitespace from "../util/withoutWhitespace.js";
 
 export default async function downloadVersion(

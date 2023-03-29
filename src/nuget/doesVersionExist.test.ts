@@ -1,18 +1,13 @@
-import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import { FetchMockStatic } from "fetch-mock";
-import mockPackageMetadata from "./mock/mockPackageMetadataResponse.js";
-import doesVersionExist from "./doesVersionExist.js";
+import mockPackageMetadata from "./mock/mockPackageMetadataResponse";
+import doesVersionExist from "./doesVersionExist";
+import { describe, expect, it, vi } from "vitest";
 
-jest.mock("node-fetch", () => require("fetch-mock-jest").sandbox());
-const fetchMock: FetchMockStatic = require("node-fetch");
-beforeEach(() => {
-  fetchMock.reset();
-});
+vi.mock("cross-fetch", () => ({ default: vi.fn() }));
 
 describe("doesVersionExist", () => {
-  test("Returns true if the package contains the requested version", async () => {
+  it("Returns true if the package contains the requested version", async () => {
     const id = "My.Package";
-    mockPackageMetadata(fetchMock, id, {
+    mockPackageMetadata(id, {
       items: [{ items: [{ catalogEntry: { version: "1" } }], upper: "1" }],
     });
 
@@ -21,9 +16,9 @@ describe("doesVersionExist", () => {
     expect(exists).toBe(true);
   });
 
-  test("Returns false if the package does not contain the requested version", async () => {
+  it("Returns false if the package does not contain the requested version", async () => {
     const id = "My.Package";
-    mockPackageMetadata(fetchMock, id, {
+    mockPackageMetadata(id, {
       items: [{ items: [], upper: "" }],
     });
 

@@ -1,4 +1,4 @@
-import getRegistrationPage from "./getRegistrationPage.js";
+import getRegistrationPage from "./getRegistrationPage";
 
 export default async function doesVersionExist(
   id: string,

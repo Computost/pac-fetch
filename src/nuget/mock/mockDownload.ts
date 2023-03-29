@@ -1,17 +1,20 @@
-import { FetchMockStatic } from "fetch-mock";
-import withoutWhitespace from "../../util/withoutWhitespace.js";
+import fetch, { Response } from "cross-fetch";
+import withoutWhitespace from "../../util/withoutWhitespace";
+import { FetchMock } from "./mockFetch";
 
 export default function mockDownload(
-  fetchMock: FetchMockStatic,
   id: string,
   version: string,
   arrayBuffer: ArrayBuffer
 ) {
-  fetchMock.get(
-    withoutWhitespace`
-      https://api.nuget.org/v3-flatcontainer/${id.toLowerCase()}/${version}/
-        ${id.toLowerCase()}.${version}.nupkg`,
-    arrayBuffer,
-    { sendAsJson: false }
+  (fetch as FetchMock).mockImplementation((request) =>
+    Promise.resolve(
+      request ===
+        withoutWhitespace`
+  https://api.nuget.org/v3-flatcontainer/${id.toLowerCase()}/${version}/
+    ${id.toLowerCase()}.${version}.nupkg`
+        ? new Response(arrayBuffer)
+        : new Response(undefined, { status: 404 })
+    )
   );
 }
