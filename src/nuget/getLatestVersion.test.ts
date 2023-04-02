@@ -1,19 +1,26 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { setupServer } from "msw/node";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import getLatestVersion from "./getLatestVersion";
-import mockPackageMetadata from "./mock/mockPackageMetadataResponse";
+import { mockPackageMetadata } from "./mock";
 
-vi.mock("cross-fetch", () => ({ default: vi.fn() }));
+const id = "My.Package";
+const server = setupServer(
+  mockPackageMetadata(id, {
+    items: [{ items: [], upper: "1" }],
+  })
+);
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+});
+afterAll(() => {
+  server.close();
+});
+afterEach(() => {
+  server.resetHandlers();
+});
 
 describe("getLatest", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
   it("Returns the latest version of the package for the ID provide", async () => {
-    const id = "My.Package";
-    mockPackageMetadata(id, {
-      items: [{ items: [], upper: "1" }],
-    });
-
     const latest = await getLatestVersion(id);
 
     expect(latest).toBe("1");

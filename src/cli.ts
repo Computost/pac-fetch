@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { program } from "commander";
-import fetchPowerPlatformCli from "./index.js";
-import { version } from "./version.js";
+import fetchPowerPlatformCli from "./index";
+import { version } from "./version";
 
 program
   .version(version)

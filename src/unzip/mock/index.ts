@@ -1,2 +1,2 @@
-export { default as createZipFile } from "./createZipFile.js";
-export { default as getDirectoryContents } from "./getDirectoryContents.js";
+export { default as createZipFile } from "./createZipFile";
+export { default as getDirectoryContents } from "./getDirectoryContents";

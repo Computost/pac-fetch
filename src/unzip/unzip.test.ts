@@ -1,15 +1,15 @@
-import { afterEach, describe, expect, test } from "@jest/globals";
 import mockFs from "mock-fs";
-import createZipFile from "./mock/createZipFile.js";
-import getDirectoryContents from "./mock/getDirectoryContents.js";
-import unzip from "./unzip.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import createZipFile from "./mock/createZipFile";
+import getDirectoryContents from "./mock/getDirectoryContents";
+import unzip from "./unzip";
 
 afterEach(() => {
   mockFs.restore();
 });
 
 describe("unzip", () => {
-  test("Extracts the subpath of the zip file to the target directory", async () => {
+  it("Extracts the subpath of the zip file to the target directory", async () => {
     const targetPath = "path/to/target";
     const targetContents = { a: "b", c: "d" };
     const zipFile = await createZipFile({

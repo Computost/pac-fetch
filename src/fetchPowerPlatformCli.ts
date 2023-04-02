@@ -2,14 +2,12 @@ import { chmod, readFile, rm, writeFile } from "fs/promises";
 import { platform } from "os";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import Config from "./types/Config.js";
-import inOneLine from "./util/inOneLine.js";
-import Options from "./types/Options.js";
-import specifications, { OperatingSystem } from "./specifications.js";
-import getLatestVersion from "./nuget/getLatestVersion.js";
-import doesVersionExist from "./nuget/doesVersionExist.js";
-import unzip from "./unzip/unzip.js";
-import downloadVersion from "./nuget/downloadVersion.js";
+import Config from "./types/Config";
+import inOneLine from "./util/inOneLine";
+import Options from "./types/Options";
+import specifications, { OperatingSystem } from "./specifications";
+import unzip from "./unzip/unzip";
+import { doesVersionExist, downloadVersion, getLatestVersion } from "./nuget";
 
 export default async function fetchPowerPlatformCli(options?: Options) {
   const operatingSystems = (function getRequestedOperatingSystems() {
@@ -199,18 +197,18 @@ export default async function fetchPowerPlatformCli(options?: Options) {
   ).reduce((current, { os, version }) => ({ ...current, [os]: version }), {});
 
   await rmConfigPromise;
-  await writeFile(
-    configPath,
-    JSON.stringify({
-      ...(version === "latest"
-        ? {
-            expiry: now + 60 * 60 * 1000,
-          }
-        : {}),
-      operatingSystems: downloadedVersions,
-      version,
-    } as Config)
-  );
+  // await writeFile(
+  //   configPath,
+  //   JSON.stringify({
+  //     ...(version === "latest"
+  //       ? {
+  //           expiry: now + 60 * 60 * 1000,
+  //         }
+  //       : {}),
+  //     operatingSystems: downloadedVersions,
+  //     version,
+  //   } as Config)
+  // );
 
   return packagePath;
 }

@@ -1,5 +1,5 @@
 import fetch from "cross-fetch";
-import withoutWhitespace from "../util/withoutWhitespace.js";
+import withoutWhitespace from "../util/withoutWhitespace";
 
 export default async function downloadVersion(
   id: string,

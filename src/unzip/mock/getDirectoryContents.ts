@@ -1,6 +1,6 @@
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
-import type FileSystem from "./FileSystem.js";
+import type FileSystem from "./FileSystem";
 
 export default async function getDirectoryContents(
   path: string
