@@ -16,8 +16,10 @@ import fetchPowerPlatformCli from "./fetchPowerPlatformCli";
 import { mockServer } from "./mock/server";
 import { mockDownload, mockPackageMetadata } from "./nuget/mock";
 import specifications, { OperatingSystem } from "./specifications";
+import Config from "./types/Config";
 import Options from "./types/Options";
 import { createZipFile, getDirectoryContents } from "./unzip/mock";
+import FileSystem from "./unzip/mock/FileSystem";
 import inOneLine from "./util/inOneLine";
 
 const now = new Date(2000, 0, 1);
@@ -167,6 +169,8 @@ describe("fetchPowerPlatformCli", () => {
       },
     });
   });
+
+  it(`when pac has been fetched less than an hour ago with the same config, `, () => {});
 });
 
 function mockFileToURL() {
@@ -176,7 +180,9 @@ function mockFileToURL() {
   return join(dirname(fetchPowerPlatformCliTsPath), "..");
 }
 
-async function getFetchResult(path: string) {
+async function getFetchResult(
+  path: string
+): Promise<{ directoryContents: FileSystem; config: Config }> {
   const directoryContents = await getDirectoryContents(path);
   const config = JSON.parse(directoryContents["pac-fetch.json"] as string);
   delete directoryContents["pac-fetch.json"];
