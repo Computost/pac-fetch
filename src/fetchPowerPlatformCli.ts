@@ -9,7 +9,9 @@ import specifications, { OperatingSystem } from "./specifications";
 import { doesVersionExist, downloadVersion, getLatestVersion } from "./nuget";
 import unzip from "./unzip";
 
-export default async function fetchPowerPlatformCli(options?: Options) {
+export default async function fetchPowerPlatformCli(
+  options?: Options
+): Promise<string> {
   const operatingSystems = (function getRequestedOperatingSystems() {
     if (options?.all && options?.operatingSystem) {
       throw new Error(
@@ -30,10 +32,7 @@ export default async function fetchPowerPlatformCli(options?: Options) {
       return [options.operatingSystem];
     }
 
-    const spec = specifications.find((spec) => spec.platform === platform());
-    if (!spec) {
-      throw new Error(`Unrecognized platform: ${platform()}`);
-    }
+    const spec = specifications.find((spec) => spec.platform === platform())!;
     return [spec.os];
   })();
 
@@ -101,7 +100,7 @@ export default async function fetchPowerPlatformCli(options?: Options) {
               Skipping pac-fetch.
             `
           );
-          return;
+          return packagePath;
         } else {
           options?.log?.(
             inOneLine`
@@ -123,7 +122,7 @@ export default async function fetchPowerPlatformCli(options?: Options) {
           Skipping pac-fetch.
         `
       );
-      return;
+      return packagePath;
     }
   }
 
