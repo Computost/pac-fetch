@@ -51,21 +51,17 @@ vi.mock("url");
 
 beforeAll(async () =>
   mockServer(
-    ...(
-      await Promise.all(
-        specifications.flatMap(async ({ os, id }) => [
-          mockPackageMetadata(id, {
-            items: [
-              {
-                items: [{ catalogEntry: { version: "1.0.0" } }],
-                upper: "1.0.0",
-              },
-            ],
-          }),
-          mockDownload(id, "1.0.0", packages[os].nugetPackage),
-        ])
-      )
-    ).flat()
+    ...specifications.flatMap(({ os, id }) => [
+      mockPackageMetadata(id, {
+        items: [
+          {
+            items: [{ catalogEntry: { version: "1.0.0" } }],
+            upper: "1.0.0",
+          },
+        ],
+      }),
+      mockDownload(id, "1.0.0", packages[os].nugetPackage),
+    ])
   )
 );
 beforeEach(() => {
