@@ -19,11 +19,14 @@ export default function createZipFile(contents: FileSystem): Promise<Buffer> {
       Object.entries(contents).forEach(([path, value]) => {
         const entryPath = join(basePath, path);
         switch (typeof value) {
-          case "string":
-            zipFile.addBuffer(Buffer.from(value), entryPath);
+          case "function":
+            value(zipFile, entryPath);
             break;
           case "object":
             zip(value, entryPath);
+            break;
+          case "string":
+            zipFile.addBuffer(Buffer.from(value), entryPath);
             break;
           default:
             throw new Error(

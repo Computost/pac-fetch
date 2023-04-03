@@ -6,8 +6,8 @@ import Config from "./types/Config";
 import inOneLine from "./util/inOneLine";
 import Options from "./types/Options";
 import specifications, { OperatingSystem } from "./specifications";
-import unzip from "./unzip/unzip";
 import { doesVersionExist, downloadVersion, getLatestVersion } from "./nuget";
+import unzip from "./unzip";
 
 export default async function fetchPowerPlatformCli(options?: Options) {
   const operatingSystems = (function getRequestedOperatingSystems() {
@@ -197,18 +197,18 @@ export default async function fetchPowerPlatformCli(options?: Options) {
   ).reduce((current, { os, version }) => ({ ...current, [os]: version }), {});
 
   await rmConfigPromise;
-  // await writeFile(
-  //   configPath,
-  //   JSON.stringify({
-  //     ...(version === "latest"
-  //       ? {
-  //           expiry: now + 60 * 60 * 1000,
-  //         }
-  //       : {}),
-  //     operatingSystems: downloadedVersions,
-  //     version,
-  //   } as Config)
-  // );
+  await writeFile(
+    configPath,
+    JSON.stringify({
+      ...(version === "latest"
+        ? {
+            expiry: now + 60 * 60 * 1000,
+          }
+        : {}),
+      operatingSystems: downloadedVersions,
+      version,
+    } as Config)
+  );
 
   return packagePath;
 }
