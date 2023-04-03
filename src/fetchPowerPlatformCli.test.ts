@@ -142,7 +142,6 @@ describe("fetchPowerPlatformCli", () => {
   });
 
   it('when "all" is true, downloads the pac runtime for each operating system', async () => {
-    const now = new Date(2000, 0, 1);
     vi.setSystemTime(now);
 
     const pacPath = await fetchPowerPlatformCli({ all: true });
