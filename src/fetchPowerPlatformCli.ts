@@ -13,23 +13,8 @@ export default async function fetchPowerPlatformCli(
   options?: Options
 ): Promise<string> {
   const operatingSystems = (function getRequestedOperatingSystems() {
-    if (options?.all && options?.operatingSystem) {
-      throw new Error(
-        'Conflicting options: cannot specify both "operatingSystem" and "all."'
-      );
-    }
-
     if (options?.all) {
       return specifications.map((spec) => spec.os);
-    }
-
-    if (options?.operatingSystem) {
-      if (!specifications.some((spec) => spec.os === options.operatingSystem)) {
-        throw new Error(
-          `Unrecognized operating system: ${options.operatingSystem}`
-        );
-      }
-      return [options.operatingSystem];
     }
 
     const spec = specifications.find((spec) => spec.platform === platform())!;

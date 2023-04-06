@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from "fs/promises";
+import { setupServer } from "msw/node";
 import { platform } from "os";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
@@ -13,7 +14,7 @@ import {
   vi,
 } from "vitest";
 import fetchPowerPlatformCli from "./fetchPowerPlatformCli";
-import { mockServer } from "./mock/server";
+import { usingServer } from "./mock/server";
 import { mockDownload, mockPackageMetadata } from "./nuget/mock";
 import specifications, { OperatingSystem } from "./specifications";
 import Config from "./types/Config";
@@ -49,8 +50,8 @@ const packages = (
 vi.mock("os");
 vi.mock("url");
 
-beforeAll(async () =>
-  mockServer(
+usingServer(
+  setupServer(
     ...specifications.flatMap(({ os, id }) => [
       mockPackageMetadata(id, {
         items: [
@@ -72,14 +73,6 @@ afterEach(() => {
 });
 
 describe("fetchPowerPlatformCli", () => {
-  it('throws an error when "all" and "operatingSystem" are both specified', async () => {
-    await expect(
-      fetchPowerPlatformCli({ all: true, operatingSystem: "linux" })
-    ).rejects.toThrowError(
-      'Conflicting options: cannot specify both "operatingSystem" and "all."'
-    );
-  });
-
   it('throws an error when "operatingSystem" is set to an unrecognized value', async () => {
     await expect(
       fetchPowerPlatformCli({ operatingSystem: "window" } as unknown as Options)
@@ -120,24 +113,6 @@ describe("fetchPowerPlatformCli", () => {
           });
         }
       );
-
-      it('when provided as "operatingSystem", downloads pac for the provided operating system', async () => {
-        mockFileToURL();
-        vi.setSystemTime(now);
-
-        const pacPath = await fetchPowerPlatformCli({
-          operatingSystem: spec.os,
-        });
-
-        expect(await getFetchResult(pacPath)).toEqual({
-          directoryContents: packages[spec.os].toolsDirectory,
-          config: {
-            expiry,
-            operatingSystems: { [spec.os]: "1.0.0" },
-            version: "latest",
-          },
-        });
-      });
     });
   });
 
