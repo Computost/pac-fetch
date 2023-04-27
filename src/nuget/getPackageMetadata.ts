@@ -1,7 +1,7 @@
 import fetch from "cross-fetch";
 import type { PackageMetadataResponse } from "./types";
 
-export default async function getRegistrationPage(
+export default async function getPackageMetadata(
   id: string
 ): Promise<PackageMetadataResponse> {
   const response = await fetch(

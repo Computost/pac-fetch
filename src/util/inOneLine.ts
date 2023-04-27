@@ -8,7 +8,7 @@ export default function inOneLine(
   ).trim();
 }
 
-// c8 ignore
+/* c8 ignore start */
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   describe("inOneLine", () => {
@@ -23,3 +23,4 @@ if (import.meta.vitest) {
       ));
   });
 }
+/* c8 ignore stop */

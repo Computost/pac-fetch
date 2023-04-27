@@ -1,17 +1,23 @@
+import { setupServer } from "msw/node";
 import { TextEncoder } from "util";
-import { beforeAll, describe, expect, it } from "vitest";
-import { mockServer } from "../mock/server";
+import { describe, expect, it } from "vitest";
+import { usingServer } from "../mock/server";
 import downloadVersion from "./downloadVersion";
-import { mockDownload } from "./mock";
+import buildPackageEndpoints from "./mock/mock";
 
-const arrayBuffer = new TextEncoder().encode("contents").buffer;
-beforeAll(() => mockServer(mockDownload("My.Package", "1", arrayBuffer)));
+usingServer(
+  setupServer(
+    ...buildPackageEndpoints(
+      "My.Package",
+      "1.0.0",
+      new TextEncoder().encode(".nupkg contents").buffer
+    )
+  )
+);
 
 describe("downloadVersion", () => {
   it("Returns the array buffer for the specified version of the package", async () => {
-    const result = await downloadVersion("My.Package", "1");
-    expect(Buffer.from(new Uint8Array(result))).toEqual(
-      Buffer.from(new Uint8Array(arrayBuffer))
-    );
+    const result = await downloadVersion("My.Package", "1.0.0");
+    expect(new TextDecoder().decode(result)).toEqual(".nupkg contents");
   });
 });

@@ -15,7 +15,7 @@ import {
 } from "vitest";
 import fetchPowerPlatformCli from "./fetchPowerPlatformCli";
 import { usingServer } from "./mock/server";
-import { mockDownload, mockPackageMetadata } from "./nuget/mock";
+import { mockDownload, mockPackageMetadata } from "./nuget/mock/mock";
 import specifications, { OperatingSystem } from "./specifications";
 import Config from "./types/Config";
 import Options from "./types/Options";
